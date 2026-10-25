@@ -1,0 +1,52 @@
+name: Update cwRsync
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-cwrsync
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Prepare Scoop
+        run: |
+          $env:SCOOP = Join-Path $env:RUNNER_TEMP 'scoop'
+          "SCOOP=$env:SCOOP" >> $env:GITHUB_ENV
+          git clone https://github.com/ScoopInstaller/Scoop.git "$env:SCOOP/apps/scoop/current"
+          if ($LASTEXITCODE -ne 0) { throw 'Scoop clone failed' }
+          git -C "$env:SCOOP/apps/scoop/current" checkout e6aa3b366bdee8ed138c1e0f7b85192ebdd35d0f
+          if ($LASTEXITCODE -ne 0) { throw 'Scoop checkout failed' }
+      - name: Refresh manifest from the official website
+        run: |
+          & "$env:SCOOP/apps/scoop/current/bin/checkver.ps1" -App cwrsync -Dir ./bucket -Update -ThrowError
+      - name: Install and verify
+        run: |
+          & "$env:SCOOP/apps/scoop/current/bin/scoop.ps1" install (Resolve-Path ./bucket/cwrsync.json).Path
+          if ($LASTEXITCODE -ne 0) { throw 'Scoop install failed' }
+          ./scripts/Test-CwRsync.ps1 -InstallDirectory "$env:SCOOP/apps/cwrsync/current"
+      - name: Commit verified manifest changes
+        run: |
+          git add -- bucket/cwrsync.json
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { exit 0 }
+          if ($LASTEXITCODE -ne 1) { throw 'Cannot inspect staged changes' }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          $version = (Get-Content bucket/cwrsync.json -Raw | ConvertFrom-Json).version
+          git commit -m "Update cwRsync to $version"
+          if ($LASTEXITCODE -ne 0) { throw 'Commit failed' }
+          git push
+          if ($LASTEXITCODE -ne 0) { throw 'Push failed' }

@@ -1,0 +1,30 @@
+{
+    "version": "6.5.0",
+    "description": "Windows rsync client bundled with Cygwin libraries and OpenSSH.",
+    "homepage": "https://itefix.net/cwrsync/",
+    "license": {
+        "identifier": "BSD-2-Clause",
+        "url": "https://itefix.net/simplified-bsd-license"
+    },
+    "architecture": {
+        "64bit": {
+            "url": "https://itefix.net/downloads/cwrsync/cwrsync_6.5.0_x64_free.zip",
+            "hash": "8dc20afec889908c05c2abaa21d37f3fcad3e7ea5f3f37e95b25e6178f6b983a"
+        }
+    },
+    "bin": "bin\\rsync.exe",
+    "checkver": {
+        "regex": "cwrsync_([\\d.]+)_x64_free\\.zip"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://itefix.net/downloads/cwrsync/cwrsync_$version_x64_free.zip",
+                "hash": {
+                    "url": "https://itefix.net/cwrsync/",
+                    "regex": "(?s)cwrsync_$version_x64_free\\.zip.{0,2000}?([a-fA-F0-9]{64})"
+                }
+            }
+        }
+    }
+}
