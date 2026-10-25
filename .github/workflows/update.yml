@@ -29,6 +29,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Scoop clone failed' }
           git -C "$env:SCOOP/apps/scoop/current" checkout e6aa3b366bdee8ed138c1e0f7b85192ebdd35d0f
           if ($LASTEXITCODE -ne 0) { throw 'Scoop checkout failed' }
+          New-Item -ItemType Directory -Path "$env:SCOOP/shims" -Force | Out-Null
+          Get-Command 7z -ErrorAction Stop
+          & "$env:SCOOP/apps/scoop/current/bin/scoop.ps1" config use_external_7zip true
+          if ($LASTEXITCODE -ne 0) { throw 'Scoop configuration failed' }
       - name: Refresh manifest from the official website
         run: |
           & "$env:SCOOP/apps/scoop/current/bin/checkver.ps1" -App cwrsync -Dir ./bucket -Update -ThrowError
