@@ -29,7 +29,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Scoop clone failed' }
           git -C "$env:SCOOP/apps/scoop/current" checkout e6aa3b366bdee8ed138c1e0f7b85192ebdd35d0f
           if ($LASTEXITCODE -ne 0) { throw 'Scoop checkout failed' }
-          New-Item -ItemType Directory -Path "$env:SCOOP/shims" -Force | Out-Null
+          New-Item -ItemType Directory -Path "$env:SCOOP/shims", "$env:SCOOP/buckets" -Force | Out-Null
           Get-Command 7z -ErrorAction Stop
           & "$env:SCOOP/apps/scoop/current/bin/scoop.ps1" config use_external_7zip true
           if ($LASTEXITCODE -ne 0) { throw 'Scoop configuration failed' }
@@ -38,7 +38,7 @@ jobs:
           & "$env:SCOOP/apps/scoop/current/bin/checkver.ps1" -App cwrsync -Dir ./bucket -Update -ThrowError
       - name: Install and verify
         run: |
-          & "$env:SCOOP/apps/scoop/current/bin/scoop.ps1" install (Resolve-Path ./bucket/cwrsync.json).Path
+          & "$env:SCOOP/apps/scoop/current/bin/scoop.ps1" install --no-update-scoop (Resolve-Path ./bucket/cwrsync.json).Path
           if ($LASTEXITCODE -ne 0) { throw 'Scoop install failed' }
           ./scripts/Test-CwRsync.ps1 -InstallDirectory "$env:SCOOP/apps/cwrsync/current"
       - name: Commit verified manifest changes
